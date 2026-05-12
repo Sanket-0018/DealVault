@@ -2,8 +2,11 @@ FROM eclipse-temurin:17
 
 WORKDIR /app
 
-COPY target/dealvault-0.0.1-SNAPSHOT.jar app.jar
+COPY . .
+
+RUN chmod +x mvnw
+RUN ./mvnw clean package -DskipTests
 
 EXPOSE 10000
 
-ENTRYPOINT ["java","-jar","app.jar"]
+ENTRYPOINT ["java","-jar","target/dealvault-0.0.1-SNAPSHOT.jar"]
