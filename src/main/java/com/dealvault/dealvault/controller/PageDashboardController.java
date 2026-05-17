@@ -32,10 +32,31 @@ public class PageDashboardController {
     public String clientDashboard(@RequestParam Long clientId, Model model) {
 
         User user = userService.findById(clientId);
-        List<Project> projects = projectService.getProjectsByClient(clientId);
-        List<Application> applications = applicationService.getAllApplications();
 
-        double lockedAmount = escrowService.getLockedAmount();
+        List<Project> projects = projectService.getProjectsByClient(clientId);
+
+        List<Application> applications = new java.util.ArrayList<>();
+
+        for (Project p : projects) {
+            applications.addAll(
+                applicationService.getApplicationsByProject(p.getId())
+            );
+        }
+
+        double lockedAmount = 0;
+
+        for (Project p : projects) {
+
+            for (Application app : applications) {
+
+                if (app.getProjectId().equals(p.getId())
+                        && ("ACCEPTED".equals(app.getStatus())
+                        || "COMPLETION_REQUESTED".equals(app.getStatus()))) {
+
+                	lockedAmount += escrowService.getAmountByProject(p.getId());
+                }
+            }
+        }
 
         model.addAttribute("user", user);
         model.addAttribute("projects", projects);
@@ -71,5 +92,21 @@ public class PageDashboardController {
         model.addAttribute("projectAmounts", projectAmounts);
 
         return "dashboard";
+    }
+    @PostMapping("/wallet/add")
+    public String addMoney(@RequestParam Long userId,
+                           @RequestParam Double amount){
+
+        User user = userService.findById(userId);
+
+        if(user.getBalance() == null){
+            user.setBalance(0.0);
+        }
+
+        user.setBalance(user.getBalance() + amount);
+
+        userService.save(user);
+
+        return "redirect:/ui/client/dashboard?clientId=" + userId;
     }
 }

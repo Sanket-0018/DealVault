@@ -56,20 +56,19 @@ public class PageApplicationController {
                                    @RequestParam Long clientId,
                                    Model model) {
 
-        applicationService.selectFreelancer(projectId, freelancerId);
+        try {
 
-        // 🔥 reload client dashboard
-        User user = userService.findById(clientId);
-        List<Project> projects = projectService.getProjectsByClient(clientId);
-        List<Application> applications = applicationService.getAllApplications();
+            applicationService.selectFreelancer(projectId, freelancerId);
 
-        double lockedAmount = escrowService.getLockedAmount();
+        } catch (RuntimeException e) {
 
-        model.addAttribute("user", user);
-        model.addAttribute("projects", projects);
-        model.addAttribute("applications", applications);
-        model.addAttribute("lockedAmount", lockedAmount);
-        model.addAttribute("message", "Freelancer Selected Successfully");
+            if (e.getMessage().equals("Insufficient Balance")) {
+
+                return "redirect:/ui/client/dashboard?clientId="
+                        + clientId
+                        + "&error=insufficient";
+            }
+        }
 
         return "redirect:/ui/client/dashboard?clientId=" + clientId;
     }

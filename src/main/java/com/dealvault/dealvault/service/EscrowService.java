@@ -1,5 +1,6 @@
 package com.dealvault.dealvault.service;
-
+import com.dealvault.dealvault.model.Project;
+import com.dealvault.dealvault.repository.ProjectRepository;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,9 @@ public class EscrowService {
 
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private ProjectRepository projectRepository;
 
     // 🔥 Deposit money (LOCK)
     public Escrow deposit(Long projectId, Double amount) {
@@ -33,6 +37,27 @@ public class EscrowService {
             return existingList.get(0);
         }
 
+        // 🔥 GET PROJECT
+        Project project = projectRepository.findById(projectId).orElse(null);
+
+        if (project == null) return null;
+
+        // 🔥 GET CLIENT
+        User client = userRepository.findById(project.getClientId()).orElse(null);
+
+        if (client == null) return null;
+
+        // 🔥 CHECK BALANCE
+        if (client.getBalance() < amount) {
+            throw new RuntimeException("Insufficient Balance");
+        }
+
+        // 🔥 DEDUCT MONEY
+        client.setBalance(client.getBalance() - amount);
+
+        userRepository.save(client);
+
+        // 🔥 CREATE ESCROW
         Escrow escrow = new Escrow();
         escrow.setProjectId(projectId);
         escrow.setAmount(amount);
@@ -96,6 +121,21 @@ public class EscrowService {
         for (Escrow e : list) {
             if ("LOCKED".equals(e.getStatus())) {
                 total += e.getAmount();
+            }
+        }
+
+        return total;
+    }
+    public double getLockedAmountByClient(Long clientId, List<Application> applications) {
+
+        double total = 0;
+
+        for (Application app : applications) {
+
+            if ("ACCEPTED".equals(app.getStatus())
+                    || "COMPLETION_REQUESTED".equals(app.getStatus())) {
+
+                total += getAmountByProject(app.getProjectId());
             }
         }
 

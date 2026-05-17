@@ -105,5 +105,8 @@ public class ApplicationService {
     return null;
 
 	}
+	public List<Application> getApplicationsByProject(Long projectId) {
+	    return applicationRepository.findByProjectId(projectId);
+	}
     
 }

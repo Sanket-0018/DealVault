@@ -48,20 +48,9 @@ public class PageProjectController {
 
         projectService.createProject(p);
 
-        User user = userService.findById(clientId);
-        List<Project> projects = projectService.getProjectsByClient(clientId);
-        List<Application> applications = applicationService.getAllApplications();
+        
 
-        double lockedAmount = escrowService.getLockedAmount();
-
-        model.addAttribute("user", user);
-        model.addAttribute("projects", projects);
-        model.addAttribute("applications", applications);
-        model.addAttribute("lockedAmount", lockedAmount);
-        model.addAttribute("message", "Project Created Successfully");
-        model.addAttribute("escrowService", escrowService);
-
-        return "client-dashboard";
+        return "redirect:/ui/client/dashboard?clientId=" + clientId;
     }
 
     // 🔥 FREELANCER MARKS COMPLETE
